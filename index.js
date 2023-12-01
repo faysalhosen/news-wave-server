@@ -68,6 +68,21 @@ async function run() {
       res.send(result);
     })
 
+    app.patch("/approval/:id", async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const updateRequest = req.body;
+      // console.log(updateRequest);
+      const updatedApproval = {
+        $set:{
+          status: updateRequest.status,
+        }
+      }
+      const result = await postsCollection.updateOne(query, updatedApproval);
+      res.send(result);
+
+    })
+
    
 run().catch(console.dir);
 
