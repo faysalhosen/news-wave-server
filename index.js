@@ -166,7 +166,25 @@ async function run() {
       res.send(result);
     })
 
-    
+    app.patch("/premiumuser/:email", async(req,res)=>{
+      const email = req.params.email;
+      const query = {email:email};
+      const updateRequest = req.body;
+      const updatedDoc = {
+        $set:{
+          account_type: updateRequest.account_type,
+        }
+      };
+      const result = await usersCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    })
+
+
+  } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close();
+  }
+}
 run().catch(console.dir);
 
 
