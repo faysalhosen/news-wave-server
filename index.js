@@ -125,6 +125,66 @@ async function run() {
     })
 
 
+    // users
+    app.post("/users", async(req,res)=>{
+      const user = req.body;
+      // console.log(user);
+      const query = {email: user.email};
+      const existingUser = await usersCollection.findOne(query);
+      if(existingUser){
+        return;
+      }
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+
+    })
+
+    app.get("/users", async(req,res)=>{
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    })
+
+    app.get("/user/:email", async(req,res)=>{
+      const email = req.params.email;
+      // console.log(email);
+      const query = {email: email};
+      const result = await usersCollection.findOne(query);
+      res.send(result)
+    })
+
+    app.patch("/user/:id", async(req,res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const updateRequest = req.body;
+      // console.log(updateRequest);
+      const updatedAdmin = {
+        $set:{
+          role: updateRequest.role,
+        }
+      }
+      const result = await usersCollection.updateOne(query, updatedAdmin);
+      res.send(result);
+    })
+
+    app.patch("/premiumuser/:email", async(req,res)=>{
+      const email = req.params.email;
+      const query = {email:email};
+      const updateRequest = req.body;
+      const updatedDoc = {
+        $set:{
+          account_type: updateRequest.account_type,
+        }
+      };
+      const result = await usersCollection.updateOne(query, updatedDoc);
+      res.send(result);
+    })
+
+
+  } finally {
+    // Ensures that the client will close when you finish/error
+    // await client.close();
+  }
+}
 run().catch(console.dir);
 
 
