@@ -48,12 +48,27 @@ async function run() {
       const result = await postsCollection.find().toArray();
       res.send(result);
     })
+    app.get("/articles", async (req, res) => {
 
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
-}
+      let query = {};
+      if (req.query?.status) {
+        query = {
+          status: req.query.status,
+        }
+        // console.log(query);
+      }
+      const result = await postsCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    app.delete("/posts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await postsCollection.deleteOne(query);
+      res.send(result);
+    })
+
+   
 run().catch(console.dir);
 
 
