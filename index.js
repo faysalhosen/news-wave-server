@@ -83,12 +83,48 @@ async function run() {
 
     })
 
+    app.patch("/posts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateRequest = req.body;
+      // console.log(updateRequest);
+      const updatedArticle = {
+        $set: {
+          title: updateRequest.title,
+          category: updateRequest.category,
+          article: updateRequest.article,
+          type: updateRequest.type,
+          photoURL: updateRequest.photoURL,
+          status: "pending",
+        }
+      };
+      const result = await postsCollection.updateOne(query, updatedArticle);
+      res.send(result);
+    })
 
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
-}
+
+    app.get("/post/:id", async (req, res) => {
+      const id = req.params.id;
+      // console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await postsCollection.findOne(query);
+      res.send(result);
+    })
+
+    app.get("/myarticles", async (req, res) => {
+
+      let query = {};
+      if (req.query?.email) {
+        query = {
+          author_email: req.query.email,
+        }
+        // console.log(query);
+      }
+      const result = await postsCollection.find(query).toArray();
+      res.send(result)
+    })
+
+
 run().catch(console.dir);
 
 
