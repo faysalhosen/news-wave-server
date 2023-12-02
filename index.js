@@ -5,7 +5,12 @@ const port = process.env.PORT || 3000;
 require("dotenv").config();
 
 // middlewares
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://news-wave-af65c.web.app"
+  ]
+}));
 app.use(express.json());
 
 // mongodb
@@ -49,17 +54,26 @@ async function run() {
       res.send(result);
     })
     app.get("/articles", async (req, res) => {
-
       let query = {};
-      if (req.query?.status) {
-        query = {
-          status: req.query.status,
+      
+      if (req.query.searchValue) {
+        const searchTerm = req.query.searchValue.trim();
+        if (searchTerm.length > 0) {
+          query = {
+            title: { $regex: searchTerm, $options: 'i' }
+          };
         }
-        // console.log(query);
       }
+    
+      if (req.query.status) {
+        query.status = req.query.status;
+      }
+    
       const result = await postsCollection.find(query).toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
+    
+
 
     app.delete("/posts/:id", async (req, res) => {
       const id = req.params.id;
@@ -68,13 +82,13 @@ async function run() {
       res.send(result);
     })
 
-    app.patch("/approval/:id", async(req,res)=>{
+    app.patch("/approval/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const updateRequest = req.body;
       // console.log(updateRequest);
       const updatedApproval = {
-        $set:{
+        $set: {
           status: updateRequest.status,
         }
       }
@@ -126,12 +140,12 @@ async function run() {
 
 
     // users
-    app.post("/users", async(req,res)=>{
+    app.post("/users", async (req, res) => {
       const user = req.body;
       // console.log(user);
-      const query = {email: user.email};
+      const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
-      if(existingUser){
+      if (existingUser) {
         return;
       }
       const result = await usersCollection.insertOne(user);
@@ -139,26 +153,26 @@ async function run() {
 
     })
 
-    app.get("/users", async(req,res)=>{
+    app.get("/users", async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     })
 
-    app.get("/user/:email", async(req,res)=>{
+    app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
       // console.log(email);
-      const query = {email: email};
+      const query = { email: email };
       const result = await usersCollection.findOne(query);
       res.send(result)
     })
 
-    app.patch("/user/:id", async(req,res)=>{
+    app.patch("/user/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const updateRequest = req.body;
       // console.log(updateRequest);
       const updatedAdmin = {
-        $set:{
+        $set: {
           role: updateRequest.role,
         }
       }
@@ -166,12 +180,12 @@ async function run() {
       res.send(result);
     })
 
-    app.patch("/premiumuser/:email", async(req,res)=>{
+    app.patch("/premiumuser/:email", async (req, res) => {
       const email = req.params.email;
-      const query = {email:email};
+      const query = { email: email };
       const updateRequest = req.body;
       const updatedDoc = {
-        $set:{
+        $set: {
           account_type: updateRequest.account_type,
         }
       };
