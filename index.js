@@ -10,6 +10,7 @@ const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 app.use(cors({
   origin: [
     "http://localhost:5173",
+    "http://localhost:5174",
     "https://news-wave-af65c.web.app"
   ]
 }));
@@ -42,11 +43,12 @@ async function run() {
 
     const postsCollection = client.db("newswave").collection("posts");
     const usersCollection = client.db("newswave").collection("users");
+    const publisherCollection = client.db("newswave").collection("publishers");
 
 
     // posts crud
     app.post("/posts", async (req, res) => {
-            console.log('res')
+      console.log('res')
 
       const post = req.body;
       const result = await postsCollection.insertOne(post);
@@ -78,7 +80,12 @@ async function run() {
       res.send(result);
     });
 
-
+    app.post('/add-publisher', async (req, res) => {
+      const document = req.body;
+      console.log(document)
+      const result = await publisherCollection.insertOne(document);
+      res.send(result)
+    })
 
     app.delete("/posts/:id", async (req, res) => {
       const id = req.params.id;
@@ -138,8 +145,8 @@ async function run() {
           author_email: req.query.email,
         }
 
-        
-       // console.log(query.email);
+
+        // console.log(query.email);
       }
       const result = await postsCollection.find(query).toArray();
       res.send(result)
@@ -175,7 +182,7 @@ async function run() {
 
     app.patch("/user/:id", async (req, res) => {
       const id = req.params.id;
-      console.log({id})
+      console.log({ id })
       const query = { _id: (id) };
       const updateRequest = req.body;
       // console.log(updateRequest);
@@ -202,7 +209,7 @@ async function run() {
     })
 
 
-    app.post("/create-payment-intent", async  (req, res) => {
+    app.post("/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       // console.log(price)
       const amount = parseInt(price * 100); // fixed invalid integer
