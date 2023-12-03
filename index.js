@@ -1,8 +1,10 @@
 const express = require("express");
+require("dotenv").config();
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 3000;
-require("dotenv").config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
+
 
 // middlewares
 app.use(cors({
@@ -44,6 +46,8 @@ async function run() {
 
     // posts crud
     app.post("/posts", async (req, res) => {
+            console.log('res')
+
       const post = req.body;
       const result = await postsCollection.insertOne(post);
       res.send(result);
@@ -53,9 +57,10 @@ async function run() {
       const result = await postsCollection.find().toArray();
       res.send(result);
     })
+
     app.get("/articles", async (req, res) => {
       let query = {};
-      
+
       if (req.query.searchValue) {
         const searchTerm = req.query.searchValue.trim();
         if (searchTerm.length > 0) {
@@ -64,15 +69,15 @@ async function run() {
           };
         }
       }
-    
+
       if (req.query.status) {
         query.status = req.query.status;
       }
-    
+
       const result = await postsCollection.find(query).toArray();
       res.send(result);
     });
-    
+
 
 
     app.delete("/posts/:id", async (req, res) => {
@@ -132,7 +137,9 @@ async function run() {
         query = {
           author_email: req.query.email,
         }
-        // console.log(query);
+
+        
+       // console.log(query.email);
       }
       const result = await postsCollection.find(query).toArray();
       res.send(result)
@@ -168,7 +175,8 @@ async function run() {
 
     app.patch("/user/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
+      console.log({id})
+      const query = { _id: (id) };
       const updateRequest = req.body;
       // console.log(updateRequest);
       const updatedAdmin = {
@@ -192,6 +200,26 @@ async function run() {
       const result = await usersCollection.updateOne(query, updatedDoc);
       res.send(result);
     })
+
+
+    app.post("/create-payment-intent", async  (req, res) => {
+      const { price } = req.body;
+      // console.log(price)
+      const amount = parseInt(price * 100); // fixed invalid integer
+      // console.log(price, amount)
+
+      if (!price || amount < 1) return;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    })
+
 
 
   } finally {
