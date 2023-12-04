@@ -50,9 +50,26 @@ async function run() {
       res.send(result);
     })
 
+    app.patch('/update-status/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const update = { status: 'approved' };
+      const updateDoc = {
+        $set: update
+      }
+      const result = await postsCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+
     app.get("/articles", async (req, res) => {
       const search = req?.query?.searchValue || '';
-      const query = {status: 'approved', title: { $regex: search, $options: 'i' } }
+      const query = { status: 'approved', title: { $regex: search, $options: 'i' } }
+      const result = await postsCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    app.get("/pending-articles", async (req, res) => {
+      const query = { status: 'pending'}
       const result = await postsCollection.find(query).toArray();
       res.send(result)
     })
@@ -82,7 +99,7 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const updateRequest = req.body;
-      // console.log(updateRequest);
+      console.log(id, updateRequest);
       const updatedApproval = {
         $set: {
           status: updateRequest.status,
