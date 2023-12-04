@@ -48,7 +48,7 @@ async function run() {
 
     // posts crud
     app.post("/posts", async (req, res) => {
-      console.log('res')
+     // console.log('res')
 
       const post = req.body;
       const result = await postsCollection.insertOne(post);
@@ -183,12 +183,14 @@ async function run() {
     app.patch("/user/:id", async (req, res) => {
       const id = req.params.id;
       console.log({ id })
-      const query = { _id: (id) };
+      const query = { _id: new ObjectId(id) };
       const updateRequest = req.body;
-      // console.log(updateRequest);
+       console.log(updateRequest);
+    
       const updatedAdmin = {
+
         $set: {
-          role: updateRequest.role,
+          role: updateRequest?.role,
         }
       }
       const result = await usersCollection.updateOne(query, updatedAdmin);
