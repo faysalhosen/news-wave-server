@@ -4,9 +4,8 @@ const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 3000;
 const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
-
-// middlewares
 app.use(cors({
   origin: [
     "http://localhost:5173",
@@ -16,15 +15,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// mongodb
-
-
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-//const uri = `mongodb+srv://${process.env.user}:${process.env.pass}@cluster0.sr4dbs2.mongodb.net/?retryWrites=true&w=majority`;
 const uri = `mongodb+srv://${process.env.user}:${process.env.pass}@cluster0.wzxk65v.mongodb.net/?retryWrites=true&w=majority`;
 
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -35,10 +27,8 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     const postsCollection = client.db("newswave").collection("posts");
@@ -48,7 +38,7 @@ async function run() {
 
     // posts crud
     app.post("/posts", async (req, res) => {
-     // console.log('res')
+      // console.log('res')
 
       const post = req.body;
       const result = await postsCollection.insertOne(post);
@@ -61,28 +51,22 @@ async function run() {
     })
 
     app.get("/articles", async (req, res) => {
-      let query = {};
-
-      if (req.query.searchValue) {
-        const searchTerm = req.query.searchValue.trim();
-        if (searchTerm.length > 0) {
-          query = {
-            title: { $regex: searchTerm, $options: 'i' }
-          };
-        }
-      }
-
-      if (req.query.status) {
-        query.status = req.query.status;
-      }
-
+      const search = req?.query?.searchValue || '';
+      const query = {status: 'approved', title: { $regex: search, $options: 'i' } }
       const result = await postsCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    app.get("/publishers", async (req, res) => {
+      let query = {};
+      const result = await publisherCollection.find().toArray();
+      // console.log(result)
       res.send(result);
     });
 
     app.post('/add-publisher', async (req, res) => {
       const document = req.body;
-      console.log(document)
+      // console.log(document)
       const result = await publisherCollection.insertOne(document);
       res.send(result)
     })
@@ -185,8 +169,8 @@ async function run() {
       console.log({ id })
       const query = { _id: new ObjectId(id) };
       const updateRequest = req.body;
-       console.log(updateRequest);
-    
+      console.log(updateRequest);
+
       const updatedAdmin = {
 
         $set: {
@@ -229,18 +213,19 @@ async function run() {
       })
     })
 
-
-
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
+    // Ensure that the client will close when you finish/error
+    //await client.close();
   }
 }
+
 run().catch(console.dir);
 
-
-
+// Move the app.listen outside the finally block
 app.get("/", (req, res) => {
-  res.send("News Wave Server Is Running Prefectly");
-})
-app.listen(port);
+  res.send("News Wave Server Is Running Perfectly");
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
